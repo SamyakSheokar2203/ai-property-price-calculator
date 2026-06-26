@@ -1,0 +1,54 @@
+2026-06-25 23:15:27,959 | INFO | ============================================================
+2026-06-25 23:15:27,959 | INFO | Application Started
+2026-06-25 23:15:27,959 | INFO | AI Property Price Predictor
+2026-06-25 23:15:27,959 | INFO | ============================================================
+2026-06-25 23:16:39,522 | INFO | ============================================================
+2026-06-25 23:16:39,522 | INFO | Application Started
+2026-06-25 23:16:39,522 | INFO | AI Property Price Predictor
+2026-06-25 23:16:39,522 | INFO | ============================================================
+2026-06-25 23:16:55,456 | INFO | ------------------------------------------------------------
+2026-06-25 23:16:55,457 | INFO | Prediction Request Received
+2026-06-25 23:16:55,457 | INFO | Payload : {'corridor': 'dehu_solapur', 'bhk': 2, 'carpet_area': 1000, 'bathrooms': 2, 'floor': 5, 'amenities': []}
+2026-06-25 23:16:55,472 | INFO | Prediction : 101.09 Lakhs
+2026-06-25 23:16:55,472 | INFO | Execution Time : 0.0148 seconds
+2026-06-25 23:16:55,472 | INFO | Prediction Completed
+2026-06-25 23:17:02,129 | INFO | ------------------------------------------------------------
+2026-06-25 23:17:02,129 | INFO | Prediction Request Received
+2026-06-25 23:17:02,129 | INFO | Payload : {'corridor': 'kolhapur_nashik', 'bhk': 2, 'carpet_area': 1000, 'bathrooms': 2, 'floor': 5, 'amenities': []}
+2026-06-25 23:17:02,134 | INFO | Prediction : 116.05 Lakhs
+2026-06-25 23:17:02,134 | INFO | Execution Time : 0.0049 seconds
+2026-06-25 23:17:02,134 | INFO | Prediction Completed
+2026-06-25 23:17:08,776 | INFO | ------------------------------------------------------------
+2026-06-25 23:17:08,777 | INFO | Prediction Request Received
+2026-06-25 23:17:08,777 | INFO | Payload : {'corridor': 'kolhapur_nashik', 'bhk': 2, 'carpet_area': 1000, 'bathrooms': 2, 'floor': 5, 'amenities': ['parking']}
+2026-06-25 23:17:08,782 | INFO | Prediction : 119.01 Lakhs
+2026-06-25 23:17:08,782 | INFO | Execution Time : 0.0042 seconds
+2026-06-25 23:17:08,782 | INFO | Prediction Completed
+2026-06-25 23:17:15,087 | INFO | ------------------------------------------------------------
+2026-06-25 23:17:15,088 | INFO | Prediction Request Received
+2026-06-25 23:17:15,088 | INFO | Payload : {'corridor': 'kolhapur_nashik', 'bhk': 2, 'carpet_area': 1000, 'bathrooms': 2, 'floor': 5, 'amenities': ['parking', 'swimming_pool', 'security']}
+2026-06-25 23:17:15,093 | INFO | Prediction : 123.72 Lakhs
+2026-06-25 23:17:15,094 | INFO | Execution Time : 0.0048 seconds
+2026-06-25 23:17:15,094 | INFO | Prediction Completed
+2026-06-25 23:17:23,260 | INFO | ------------------------------------------------------------
+2026-06-25 23:17:23,260 | INFO | Prediction Request Received
+2026-06-25 23:17:23,261 | INFO | Payload : {'corridor': 'kolhapur_nashik', 'bhk': 22, 'carpet_area': 10001, 'bathrooms': 23, 'floor': 5, 'amenities': ['parking', 'swimming_pool', 'security']}
+2026-06-25 23:17:23,265 | INFO | Prediction : 286.02 Lakhs
+2026-06-25 23:17:23,265 | INFO | Execution Time : 0.0043 seconds
+2026-06-25 23:17:23,265 | INFO | Prediction Completed
+2026-06-26 00:22:14,128 | INFO | ============================================================
+2026-06-26 00:22:14,129 | INFO | Application Started
+2026-06-26 00:22:14,129 | INFO | AI Property Price Predictor
+2026-06-26 00:22:14,129 | INFO | ============================================================
+2026-06-26 00:27:57,864 | INFO | ============================================================
+2026-06-26 00:27:57,864 | INFO | Application Started
+2026-06-26 00:27:57,864 | INFO | AI Property Price Predictor
+2026-06-26 00:27:57,864 | INFO | ============================================================
+2026-06-26 00:28:02,889 | INFO | ============================================================
+2026-06-26 00:28:02,889 | INFO | Application Started
+2026-06-26 00:28:02,889 | INFO | AI Property Price Predictor
+2026-06-26 00:28:02,889 | INFO | ============================================================
+2026-06-26 00:28:05,260 | INFO | ============================================================
+2026-06-26 00:28:05,260 | INFO | Application Started
+2026-06-26 00:28:05,260 | INFO | AI Property Price Predictor
+2026-06-26 00:28:05,260 | INFO | ============================================================
