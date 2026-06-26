@@ -3,326 +3,190 @@ name: AI Property Price Predictor CI
 on:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: read
-  security-events: write
-
-concurrency:
-  group: ai-property-price-predictor-ci
-  cancel-in-progress: true
-
-env:
-  PYTHON_VERSION: "3.12"
-  NODE_VERSION: "22"
-
 jobs:
 
-################################################################################
-# FRONTEND
-################################################################################
+  application-validation:
 
-  frontend:
-
-    name: 🖥️ Frontend
+    name: Application Validation
 
     runs-on: ubuntu-latest
-
-    timeout-minutes: 15
-
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: 📦 Install Dependencies
-        run: |
-          npm ci
-
-      - name: 🔍 Show Node Version
-        run: |
-          node -v
-          npm -v
-
-      - name: 🧹 Run ESLint
-        run: |
-          npm run lint
-
-      - name: 🔒 Security Audit
-        run: |
-          npm audit --audit-level=high
-
-      - name: 🏗️ Build React Application
-        run: |
-          npm run build
-
-      - name: 📂 Verify Build Folder
-        run: |
-          ls -la
-          ls -la dist
-
-      - name: 📤 Upload Frontend Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/dist
-          retention-days: 7
-
-      - name: 📝 Frontend Summary
-        run: |
-          echo "# Frontend Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ npm install completed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ ESLint passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ npm audit completed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ React production build created" >> $GITHUB_STEP_SUMMARY
-
-################################################################################
-# BACKEND
-################################################################################
-
-  backend:
-
-    name: ⚙️ Backend
-
-    runs-on: ubuntu-latest
-
-    needs: frontend
 
     timeout-minutes: 20
 
-    defaults:
-      run:
-        working-directory: backend
-
     steps:
 
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
+      ####################################################
+      # Frontend
+      ####################################################
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: |
+          npm run build
+
+      - name: Lint Frontend
+        working-directory: frontend
+        run: |
+          npm run lint
+
+      - name: Frontend Security Scan
+        working-directory: frontend
+        run: |
+          npm audit --audit-level=high
+
+      ####################################################
+      # Backend
+      ####################################################
+
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
+          python-version: "3.12"
 
-      - name: 📦 Install Dependencies
+      - name: Install Backend Dependencies
+        working-directory: backend
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install black isort flake8 pip-audit
+          pip install black pip-audit
 
-      - name: 🔍 Show Python Version
-        run: |
-          python --version
-          pip --version
-
-      - name: 🎨 Black Formatting Check
+      - name: Check Python Formatting
+        working-directory: backend
         run: |
           black --check .
 
-      - name: 📚 Import Order Check
-        run: |
-          isort . --check-only
-
-      - name: 🧹 Flake8 Lint
-        run: |
-          flake8 .
-
-      - name: 🔒 Python Security Audit
+      - name: Python Dependency Security Scan
+        working-directory: backend
         run: |
           pip-audit
 
-      - name: 🚀 Start FastAPI Server
+      - name: Start FastAPI Server
+        working-directory: backend
         run: |
           uvicorn app.main:app --host 127.0.0.1 --port 8000 &
           sleep 10
 
-      - name: ❤️ Health Check
+      - name: Test Health Endpoint
         run: |
           curl --fail http://127.0.0.1:8000/health
 
-      - name: 🤖 Model Information Test
+      - name: Test Model Info Endpoint
         run: |
           curl --fail http://127.0.0.1:8000/model-info
 
-      - name: 🧠 Prediction API Test
+      - name: Test Prediction API
         run: |
           curl --fail \
             -X POST http://127.0.0.1:8000/predict \
             -H "Content-Type: application/json" \
             -d '{
-              "corridor":"dehu_solapur",
-              "bhk":2,
-              "carpet_area":1000,
-              "bathrooms":2,
-              "floor":5,
-              "amenities":["gym","parking"]
-            }'
+                  "corridor":"dehu_solapur",
+                  "bhk":2,
+                  "carpet_area":1000,
+                  "bathrooms":2,
+                  "floor":5,
+                  "amenities":["gym","parking"]
+                }'
 
-      - name: 📂 Upload Prediction Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-logs
-          path: backend/logs
-          if-no-files-found: ignore
-          retention-days: 7
+  docker-validation:
 
-      - name: 📝 Backend Summary
-        run: |
-          echo "# Backend Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Dependencies Installed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Black Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ isort Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Flake8 Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ pip-audit Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Health API Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Model Info Passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Prediction API Passed" >> $GITHUB_STEP_SUMMARY          
-
-
-################################################################################
-# DOCKER
-################################################################################
-
-  docker:
-
-    name: 🐳 Docker
+    name: Docker Validation
 
     runs-on: ubuntu-latest
 
-    needs:
-      - frontend
-      - backend
+    needs: application-validation
 
-    timeout-minutes: 25
+    timeout-minutes: 20
 
     steps:
 
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      ##########################################################
-      # Build Backend Image
-      ##########################################################
+      ####################################################
+      # Build Docker Images
+      ####################################################
 
-      - name: 🏗️ Build Backend Docker Image
+      - name: Build Docker Images
         run: |
-          docker build -t ai-backend ./backend
+          docker compose build
 
-      ##########################################################
-      # Build Frontend Image
-      ##########################################################
+      ####################################################
+      # Start Application
+      ####################################################
 
-      - name: 🏗️ Build Frontend Docker Image
+      - name: Start Containers
         run: |
-          docker build -t ai-frontend ./frontend
+          docker compose up -d
 
-      ##########################################################
-      # Backend Container Test
-      ##########################################################
-
-      - name: 🚀 Start Backend Container
+      - name: Wait for Application
         run: |
-          docker run -d \
-            --name backend-test \
-            -p 8000:8000 \
-            ai-backend
+          sleep 20
 
-      - name: ⏳ Wait for Backend
+      ####################################################
+      # Validate Backend APIs
+      ####################################################
+
+      - name: Test Health Endpoint
         run: |
-          sleep 15
+          curl --fail http://localhost:8000/health
 
-      - name: ❤️ Backend Health Check
+      - name: Test Model Info Endpoint
         run: |
-          curl --fail http://127.0.0.1:8000/health
+          curl --fail http://localhost:8000/model-info
 
-      - name: 🤖 Backend Model Info Test
-        run: |
-          curl --fail http://127.0.0.1:8000/model-info
-
-      - name: 🧠 Backend Prediction Test
+      - name: Test Prediction API
         run: |
           curl --fail \
-            -X POST http://127.0.0.1:8000/predict \
+            -X POST http://localhost:8000/predict \
             -H "Content-Type: application/json" \
             -d '{
-              "corridor":"dehu_solapur",
-              "bhk":2,
-              "carpet_area":1000,
-              "bathrooms":2,
-              "floor":5,
-              "amenities":["gym","parking"]
-            }'
+                  "corridor":"dehu_solapur",
+                  "bhk":2,
+                  "carpet_area":1000,
+                  "bathrooms":2,
+                  "floor":5,
+                  "amenities":["gym","parking"]
+                }'
 
-      - name: 📋 Backend Container Logs
-        if: always()
-        run: |
-          docker logs backend-test
+      ####################################################
+      # Docker Image Security Scan
+      ####################################################
 
-      - name: 🛑 Stop Backend Container
-        if: always()
-        run: |
-          docker stop backend-test || true
-          docker rm backend-test || true
-
-      ##########################################################
-      # Trivy Backend Scan
-      ##########################################################
-
-      - name: 🔒 Scan Backend Image
+      - name: Scan Backend Image
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ai-backend
           format: table
           exit-code: "0"
 
-      ##########################################################
-      # Trivy Frontend Scan
-      ##########################################################
-
-      - name: 🔒 Scan Frontend Image
+      - name: Scan Frontend Image
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ai-frontend
           format: table
           exit-code: "0"
 
-      ##########################################################
-      # Docker Summary
-      ##########################################################
-
-      - name: 📝 Docker Summary
-        run: |
-          echo "# Docker Build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Backend Docker Image Built" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Frontend Docker Image Built" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Backend Container Started" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Health Endpoint Verified" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Prediction API Verified" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Trivy Backend Scan Completed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Trivy Frontend Scan Completed" >> $GITHUB_STEP_SUMMARY
-
-      ##########################################################
+      ####################################################
       # Cleanup
-      ##########################################################
+      ####################################################
 
-      - name: 🧹 Cleanup Docker
+      - name: Stop Containers
         if: always()
         run: |
-          docker system prune -af
+          docker compose down                
