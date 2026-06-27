@@ -42,7 +42,9 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        # Render Frontend
+        "https://ai-property-price-calculator-1.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
