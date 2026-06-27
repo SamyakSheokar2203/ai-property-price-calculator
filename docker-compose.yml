@@ -1,8 +1,8 @@
-version: "3.9"
-
 services:
 
   backend:
+
+    image: ai-backend
 
     build:
       context: ./backend
@@ -15,6 +15,8 @@ services:
     restart: unless-stopped
 
   frontend:
+
+    image: ai-frontend
 
     build:
       context: ./frontend
