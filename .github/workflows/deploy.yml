@@ -50,7 +50,7 @@ jobs:
         run: |
           npm audit --audit-level=high
 
-          ################################################################################
+################################################################################
 # Backend Build
 ################################################################################
 
@@ -137,9 +137,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      ####################################################
+      # Build Images
+      ####################################################
+
       - name: Build Docker Images
         run: |
           docker compose build
+
+      ####################################################
+      # Start Containers
+      ####################################################
 
       - name: Start Docker Containers
         run: |
@@ -149,9 +157,13 @@ jobs:
         run: |
           docker compose ps
 
-      - name: Wait for Application
+      - name: Wait for Containers
         run: |
           sleep 20
+
+      ####################################################
+      # Test Application
+      ####################################################
 
       - name: Test Health Endpoint
         run: |
@@ -175,21 +187,151 @@ jobs:
               "amenities":["gym","parking"]
             }'
 
-      - name: Scan Backend Docker Image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ai-backend
-          format: table
-          exit-code: "0"
+      ####################################################
+      # Install Trivy
+      ####################################################
 
-      - name: Scan Frontend Docker Image
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ai-frontend
-          format: table
-          exit-code: "0"
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg lsb-release apt-transport-https
+
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | \
+          gpg --dearmor | \
+          sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | \
+          sudo tee /etc/apt/sources.list.d/trivy.list
+
+          sudo apt-get update
+          sudo apt-get install -y trivy
+
+      ####################################################
+      # Docker Security Scan
+      ####################################################
+
+      - name: Scan Backend Image
+        continue-on-error: true
+        run: |
+          trivy image ai-backend
+
+      - name: Scan Frontend Image
+        continue-on-error: true
+        run: |
+          trivy image ai-frontend
+
+      ####################################################
+      # Cleanup
+      ####################################################
 
       - name: Stop Docker Containers
         if: always()
         run: |
-          docker compose down            
+          docker compose down
+
+
+################################################################################
+# Deploy to Render
+################################################################################
+
+  deploy-render:
+
+    name: Deploy to Render
+
+    runs-on: ubuntu-latest
+
+    needs: docker-build
+
+    timeout-minutes: 20
+
+    steps:
+
+      ####################################################
+      # Trigger Backend Deployment
+      ####################################################
+
+      - name: Deploy Backend
+        run: |
+          curl -X POST "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}"
+
+      ####################################################
+      # Wait for Backend Deployment
+      ####################################################
+
+      - name: Wait for Backend
+        run: |
+          sleep 90
+
+      ####################################################
+      # Trigger Frontend Deployment
+      ####################################################
+
+      - name: Deploy Frontend
+        run: |
+          curl -X POST "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}"
+
+      ####################################################
+      # Wait for Frontend Deployment
+      ####################################################
+
+      - name: Wait for Frontend
+        run: |
+          sleep 90 
+
+################################################################################
+# Smoke Test
+################################################################################
+
+  smoke-test:
+
+    name: Smoke Test
+
+    runs-on: ubuntu-latest
+
+    needs: deploy-render
+
+    timeout-minutes: 10
+
+    steps:
+
+      ####################################################
+      # Backend Health
+      ####################################################
+
+      - name: Check Backend Health
+        run: |
+          curl --fail https://ai-property-price-calculator-2.onrender.com/health
+
+      ####################################################
+      # Backend Model Info
+      ####################################################
+
+      - name: Check Model Info
+        run: |
+          curl --fail https://ai-property-price-calculator-2.onrender.com/model-info
+
+      ####################################################
+      # Prediction API
+      ####################################################
+
+      - name: Test Prediction API
+        run: |
+          curl --fail \
+            -X POST https://ai-property-price-calculator-2.onrender.com/predict \
+            -H "Content-Type: application/json" \
+            -d '{
+              "corridor":"dehu_solapur",
+              "bhk":2,
+              "carpet_area":1000,
+              "bathrooms":2,
+              "floor":5,
+              "amenities":["gym","parking"]
+            }'
+
+      ####################################################
+      # Frontend Test
+      ####################################################
+
+      - name: Check Frontend
+        run: |
+          curl --fail https://ai-property-price-calculator-1.onrender.com                           
